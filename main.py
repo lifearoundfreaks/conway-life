@@ -1,8 +1,8 @@
 from tkinter import Tk, Canvas
-from conway import Board
+from conway import NumpyBoard
 
 
-class TkBoard(Board):
+class TkBoard(NumpyBoard):
 
     BORDER_WIDTH = 1
     CELL_SIZE = 20
@@ -47,8 +47,8 @@ class TkBoard(Board):
     def on_pressed(self, event):
 
         canvas_index = self.canvas.find_closest(event.x, event.y)
-        index_2d = self.get_2d_index(canvas_index)
-        if index_2d in self.alive_cells:
+        x, y = self.get_2d_index(canvas_index)
+        if self.cells[x, y]:
             self.erasing = True
         else:
             self.drawing = True
@@ -65,14 +65,14 @@ class TkBoard(Board):
             if canvas_index is None:
                 canvas_index = self.canvas.find_closest(event.x, event.y)
 
-            index_2d = self.get_2d_index(canvas_index)
+            x, y = self.get_2d_index(canvas_index)
 
             if self.drawing:
                 self.canvas.itemconfig(canvas_index, fill=self.ALIVE_COLOUR)
-                self.alive_cells.add(index_2d)
+                self.cells[x, y] = 1
             elif self.erasing:
                 self.canvas.itemconfig(canvas_index, fill=self.DEAD_COLOUR)
-                self.alive_cells.discard(index_2d)
+                self.cells[x, y] = 0
 
     def draw_board(self):
 
@@ -83,7 +83,7 @@ class TkBoard(Board):
             for y in range(self.WIDTH):
 
                 colour = self.ALIVE_COLOUR \
-                    if (x, y) in self.alive_cells \
+                    if self.cells[x, y] \
                     else self.DEAD_COLOUR
 
 
@@ -98,15 +98,15 @@ class TkBoard(Board):
 
     def update(self, event, *args, **kwargs):
 
-        old_state = self.alive_cells.copy()
+        old_state = self.cells
         super().update(*args, **kwargs)
+        state_changed = old_state != self.cells
         for x in range(self.HEIGHT):
             for y in range(self.WIDTH):
-                index = (x, y)
-                if (index in old_state) != (index in self.alive_cells):
+                if state_changed[x, y]:
                     self.canvas.itemconfig(
                         self.get_canvas_index(x, y),
-                        fill=self.ALIVE_COLOUR if index in self.alive_cells
+                        fill=self.ALIVE_COLOUR if self.cells[x, y]
                         else self.DEAD_COLOUR
                     )
 

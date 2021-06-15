@@ -1,4 +1,5 @@
 from collections import defaultdict
+import numpy as np
 
 
 class Board:
@@ -59,6 +60,37 @@ class Board:
                 new_board.add(cell)
 
         self.alive_cells = new_board
+
+
+class NumpyBoard:
+
+    def __init__(self, height=10, width=20):
+
+        self.HEIGHT = height
+        self.WIDTH = width
+
+        self.cells = np.zeros((height, width))
+
+    def update(self):
+
+        # Credit goes to https://dana.loria.fr/doc/game-of-life.html
+        # for the formula used here
+
+        old_state = self.cells
+        neighbours = np.zeros(old_state.shape)
+        neighbours[1:, 1:] += old_state[:-1, :-1]
+        neighbours[1:, :-1] += old_state[:-1, 1:]
+        neighbours[:-1, 1:] += old_state[1:, :-1]
+        neighbours[:-1, :-1] += old_state[1:, 1:]
+        neighbours[:-1, :] += old_state[1:, :]
+        neighbours[1:, :] += old_state[:-1, :]
+        neighbours[:, :-1] += old_state[:, 1:]
+        neighbours[:, 1:] += old_state[:, :-1]
+        self.cells = (
+            (old_state == 1) & (neighbours < 4) & (neighbours > 1)
+        ) | (
+            (old_state == 0) & (neighbours == 3)
+        )
 
 
 if __name__ == '__main__':
